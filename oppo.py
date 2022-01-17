@@ -9,11 +9,14 @@ def lex_file(file_path: str):
 
 def lex_lines(lines: str):
     tokens = []
+
     for line in lines:
         splitted = line.strip().split(" ")
         if len(splitted) == 1 and splitted[0] == "":
             continue
         for token in splitted:
+            if token == "#":
+                break
             tokens.append(token)
     return tokens
 
