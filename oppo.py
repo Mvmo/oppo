@@ -23,22 +23,44 @@ def lex_lines(lines: str):
 
 def tokens_to_instructions(tokens):
     instructions = []
-    for token in tokens:
+
+    def append_instruction(x: tuple, array=instructions):
+        instructions.append(
+            (x[0], x[1] if len(x) == 2 else None, len(instructions)))
+
+    for index in range(len(tokens)):
+        token = tokens[index]
         if token.isnumeric():
-            instructions.append(("push", int(token)))
+            append_instruction(("push", int(token)))
         elif token == "+":
-            instructions.append(("plus", ))
+            append_instruction(("plus", ))
         elif token == "-":
-            instructions.append(("sub", ))
+            append_instruction(("sub", ))
         elif token == "~":
-            instructions.append(("print", ))
+            append_instruction(("print", ))
+        elif token == "=":
+            append_instruction(("cmp", ))
+        elif token == "if":
+            start_index = index + 1
+            end_index = -1
+            for _index in range(index, len(tokens)):
+                token = tokens[_index]
+                if (token != "end"):
+                    continue
+                end_index = _index
+                break
+            # first param is where to jump if true and end param is where to jmp if false
+            append_instruction(("cjmp", (start_index, end_index)))
+        elif token == "end":
+            continue
         else:
             print(f"Unknown symbol: {token}")
     return instructions
 
 
 def interpret_instructions(instructions):
-    for i in range(len(instructions)):
+    index_iter = iter(range(len(instructions)))
+    for i in index_iter:
         instruction = instructions[i]
         op = instruction[0]
         if op == "push":
@@ -50,6 +72,13 @@ def interpret_instructions(instructions):
             exec_sub()
         elif op == "print":
             exec_print()
+        elif op == "cmp":
+            exec_compare()
+        elif op == "cjmp":
+            points = instruction[1]
+            where_to_jump = exec_conditional_jump(points[0], points[1])
+            for _ in range(where_to_jump - i - 1):
+                next(index_iter)
 
 
 def exec_push(num: int):
@@ -71,9 +100,21 @@ def exec_print():
     print(tail)
 
 
+def exec_compare():
+    stack.append(int(stack.pop() == stack.pop()))
+
+
+def exec_conditional_jump(if_true: int, if_false: int):
+    condition = stack.pop()
+    return if_true if bool(condition) else if_false
+
+
 if __name__ == "__main__":
     print(f"OPPO Language - {oppo_version}")
     tokens = lex_file("./example.oppo")
     instructions = tokens_to_instructions(tokens)
+
+    for x in instructions:
+        print(x)
 
     interpret_instructions(instructions)
