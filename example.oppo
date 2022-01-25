@@ -1,12 +1,7 @@
- 5 5 - ~ # python equivalent: print(5 - 5)
-
-200 200 + ~ # python equivalent: print(200 + 200)
-
-200 100 + 300 = ~
-
-
-200 200 = if
+200 201 = if
     1337 ~
-end
+else
+    1889 ~
+end 
 
-200 200 + ~
+1000 ~

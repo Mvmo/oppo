@@ -28,6 +28,13 @@ def tokens_to_instructions(tokens):
         instructions.append(
             (x[0], x[1] if len(x) == 2 else None, len(instructions)))
 
+    def find_end_or_else(start):
+        for _index in range(start, len(tokens)):
+            token = tokens[_index]
+            if token != "end" and token != "else":
+                continue
+            return (_index, token)
+
     for index in range(len(tokens)):
         token = tokens[index]
         if token.isnumeric():
@@ -42,15 +49,18 @@ def tokens_to_instructions(tokens):
             append_instruction(("cmp", ))
         elif token == "if":
             start_index = index + 1
-            end_index = -1
-            for _index in range(index, len(tokens)):
-                token = tokens[_index]
-                if (token != "end"):
-                    continue
-                end_index = _index
-                break
+            end = find_end_or_else(index)
+
+            end_index = end[0]
+
+            if end[1] == "else":
+                end_index = end_index + 1
+
             # first param is where to jump if true and end param is where to jmp if false
             append_instruction(("cjmp", (start_index, end_index)))
+        elif token == "else":
+            end = find_end_or_else(index + 1)
+            append_instruction(("jmp", end[0]))
         elif token == "end":
             continue
         else:
@@ -78,6 +88,10 @@ def interpret_instructions(instructions):
             points = instruction[1]
             where_to_jump = exec_conditional_jump(points[0], points[1])
             for _ in range(where_to_jump - i - 1):
+                next(index_iter)
+        elif op == "jmp":
+            point = instruction[1]
+            for _ in range(point - i - 1):
                 next(index_iter)
 
 
@@ -114,7 +128,7 @@ if __name__ == "__main__":
     tokens = lex_file("./example.oppo")
     instructions = tokens_to_instructions(tokens)
 
-    for x in instructions:
-        print(x)
+    # for x in instructions:
+    #  print(x)
 
     interpret_instructions(instructions)
