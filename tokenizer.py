@@ -135,6 +135,3 @@ def tokenize(input: str, debug = True):
                 flush_token()
             inc_column()
         inc_row()
-
-if __name__ == "__main__":
-    tokenize("""10 as i while 0 i 1 - as i i < do i ~end""")
