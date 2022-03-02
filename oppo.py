@@ -5,56 +5,6 @@ from typing import *
 import sys
 
 oppo_version = "0.0.1"
-stack = []
-
-
-def lex_file(file_path: str):
-    with open(file_path, "r") as file:
-        return lex_lines(file.readlines())
-
-
-Location = Tuple[str, int, int]
-
-
-class TokenType(Enum):
-    KEYWORD = auto()
-    IDENTIFIER = auto()
-    INT = auto()
-    STRING = auto()
-    BOOLEAN = auto()
-
-
-@dataclass
-class Token:
-    literal: str
-
-
-def tokenize(lines: str):
-
-    pass
-
-
-def lex_lines(lines: str):
-    tokens = []
-
-    for line in lines:
-        splitted = line.strip().split(" ")
-        if len(splitted) == 1 and splitted[0] == "":
-            continue
-
-        stack = []
-
-        for token in splitted:
-            if token == "#":
-                break
-
-            tokens.append(token)
-    return tokens
-
-
-reserverd_tokens = ["+", "-", "*", "/", "~", "=", "<", ">",
-                    "<=", ">=", "dup", "if", "else", "while", "do", "end", "as"]
-
 
 def tokens_to_instructions(tokens):
     instructions = []
