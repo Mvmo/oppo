@@ -1,3 +1,9 @@
+import argparse
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import *
+import sys
+
 oppo_version = "0.0.1"
 stack = []
 
@@ -7,6 +13,27 @@ def lex_file(file_path: str):
         return lex_lines(file.readlines())
 
 
+Location = Tuple[str, int, int]
+
+
+class TokenType(Enum):
+    KEYWORD = auto()
+    IDENTIFIER = auto()
+    INT = auto()
+    STRING = auto()
+    BOOLEAN = auto()
+
+
+@dataclass
+class Token:
+    literal: str
+
+
+def tokenize(lines: str):
+
+    pass
+
+
 def lex_lines(lines: str):
     tokens = []
 
@@ -14,121 +41,155 @@ def lex_lines(lines: str):
         splitted = line.strip().split(" ")
         if len(splitted) == 1 and splitted[0] == "":
             continue
+
+        stack = []
+
         for token in splitted:
             if token == "#":
                 break
+
             tokens.append(token)
     return tokens
 
 
+reserverd_tokens = ["+", "-", "*", "/", "~", "=", "<", ">",
+                    "<=", ">=", "dup", "if", "else", "while", "do", "end", "as"]
+
+
 def tokens_to_instructions(tokens):
     instructions = []
+    stack = []
 
     def append_instruction(x: tuple, array=instructions):
         instructions.append(
             (x[0], x[1] if len(x) == 2 else None, len(instructions)))
+        return x
 
-    def find_end_or_else(start):
-        for _index in range(start, len(tokens)):
-            token = tokens[_index]
-            if token != "end" and token != "else":
-                continue
-            return (_index, token)
-
-    for index in range(len(tokens)):
+    index = 0
+    while index < len(tokens):
         token = tokens[index]
+        ri = len(instructions)
+        index += 1
         if token.isnumeric():
             append_instruction(("push", int(token)))
         elif token == "+":
-            append_instruction(("plus", ))
+            append_instruction(("add", ))
         elif token == "-":
             append_instruction(("sub", ))
+        elif token == "*":
+            append_instruction(("mul", ))
+        elif token == "/":
+            append_instruction(("div", ))
         elif token == "~":
-            append_instruction(("print", ))
+            append_instruction(("dump", ))
         elif token == "=":
             append_instruction(("cmp", ))
+        elif token == "<":
+            append_instruction(("lt", ))
+        elif token == "<=":
+            append_instruction(("lte", ))
+        elif token == ">":
+            append_instruction(("gt", ))
+        elif token == ">=":
+            append_instruction(("gte", ))
+        elif token == "dup":
+            append_instruction(("dup", ))
         elif token == "if":
-            start_index = index + 1
-            end = find_end_or_else(index)
-
-            end_index = end[0]
-
-            if end[1] == "else":
-                end_index = end_index + 1
-
+            instruction = ("cjmp", ("if", ri))
+            stack.append(instruction)
             # first param is where to jump if true and end param is where to jmp if false
-            append_instruction(("cjmp", (start_index, end_index)))
+            append_instruction(instruction)
         elif token == "else":
-            end = find_end_or_else(index + 1)
-            append_instruction(("jmp", end[0]))
+            enclosing = stack.pop()
+            if_index = enclosing[1][1]
+
+            instructions[if_index] = ("cjmp", (if_index + 1, ri + 1))
+            instruction = ("jmp", ("else", ri))
+
+            stack.append(instruction)
+            append_instruction(instruction)
+        elif token == "while":
+            instruction = (f"$~while{len(instructions)}:", )
+            stack.append(instruction)
+            append_instruction(instruction)
+        elif token == "do":
+            enclosing = stack.pop()
+            instruction = ("cjmp", ("do", enclosing[0], ri))
+            stack.append(instruction)
+            append_instruction(instruction)
         elif token == "end":
+            enclosing = stack.pop()
+            typ = enclosing[1][0]
+            if typ == "if":
+                if_index = enclosing[1][1]
+                instructions[if_index] = (
+                    "cjmp", (if_index + 1, ri))
+            if typ == "else":
+                else_index = enclosing[1][1]
+                instructions[else_index] = ("jmp", (ri))
+            if typ == "do":
+                while_label = enclosing[1][1]
+                do_index = enclosing[1][2]
+                instructions[do_index] = ("cjmp", (do_index + 1, ri + 1))
+                append_instruction((f"goto {while_label}".removesuffix(":"), ))
+        elif token == "as":
+            if len(tokens) == index - 1:
+                print(f"Tokenizer: no tokens following after as!")
+            identifier = tokens[index]
+            if identifier in reserverd_tokens or identifier.isnumeric():
+                print(
+                    f"Tokenizer: {identifier} can't be used as identifier")
+                sys.exit(-1)
+
+            index += 1
+            instruction = append_instruction(("store", identifier))
             continue
         else:
-            print(f"Unknown symbol: {token}")
+            append_instruction(("load", token))
+            continue
     return instructions
 
 
-def interpret_instructions(instructions):
-    index_iter = iter(range(len(instructions)))
-    for i in index_iter:
-        instruction = instructions[i]
-        op = instruction[0]
-        if op == "push":
-            val = instruction[1]
-            exec_push(val)
-        elif op == "plus":
-            exec_plus()
-        elif op == "sub":
-            exec_sub()
-        elif op == "print":
-            exec_print()
-        elif op == "cmp":
-            exec_compare()
-        elif op == "cjmp":
-            points = instruction[1]
-            where_to_jump = exec_conditional_jump(points[0], points[1])
-            for _ in range(where_to_jump - i - 1):
-                next(index_iter)
-        elif op == "jmp":
-            point = instruction[1]
-            for _ in range(point - i - 1):
-                next(index_iter)
+def compile_sick_bytecode(src_name, binary_name):
+    tokens = lex_file(src_name)
+    instructions = tokens_to_instructions(tokens)
 
+    def extract_params(params):
+        if type(params) == tuple:
+            mystr = ""
+            for p in params:
+                mystr += f" {p}"
+            return mystr
+        elif params == None:
+            return ""
+        return f" {params}"
 
-def exec_push(num: int):
-    stack.append(num)
-
-
-def exec_plus():
-    result = int(stack.pop()) + int(stack.pop())
-    exec_push(result)
-
-
-def exec_sub():
-    result = int(stack.pop()) - int(stack.pop())
-    exec_push(result)
-
-
-def exec_print():
-    tail = stack[len(stack) - 1]
-    print(tail)
-
-
-def exec_compare():
-    stack.append(int(stack.pop() == stack.pop()))
-
-
-def exec_conditional_jump(if_true: int, if_false: int):
-    condition = stack.pop()
-    return if_true if bool(condition) else if_false
+    with open(binary_name + ".sickc", "w") as output_stream:
+        output_stream.writelines(
+            [f"{ins[0]}{extract_params(ins[1])}\n" for ins in instructions])
 
 
 if __name__ == "__main__":
-    print(f"OPPO Language - {oppo_version}")
+    parser = argparse.ArgumentParser(
+        description=f"OPPO Language - {oppo_version}")
+
+    parser.add_argument("file", metavar="F", type=str, nargs=1,
+                        help="File to compile")
+    parser.add_argument("--compile", dest="compile",
+                        choices=["sickvm"], type=str, required=False)
+    parser.add_argument("--output", dest="output",
+                        type=str, required=False)
+
+    args = parser.parse_args()
+
+    src_name = args.file[0]
+
+    if args.compile != None:
+        output_name = args.output if not None else "a"
+        arch = args.compile
+        if arch == "sickvm":
+            compile_sick_bytecode(src_name, output_name)
+        sys.exit(-1)
+
     tokens = lex_file("./example.oppo")
     instructions = tokens_to_instructions(tokens)
-
-    # for x in instructions:
-    #  print(x)
-
-    interpret_instructions(instructions)
