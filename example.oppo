@@ -1,7 +1,4 @@
-200 201 = if
-    1337 ~
-else
-    1889 ~
-end 
-
-1000 ~
+10 as i
+while 0 i 1 - as i i < do
+    i ~
+end
