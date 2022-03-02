@@ -21,6 +21,7 @@ intrinsics = [
     "do", 
     "end", 
     "as",
+    "println",
     "print"
 ]
 
