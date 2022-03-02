@@ -116,6 +116,7 @@ def tokenize(input: str, debug = True) -> "list[Token]":
                 continue
             if char == "\"":
                 flush_token()
+                inc_column()
                 current_token.literal = char
                 while position[1] < len(line):
                     char = line[position[1]]
