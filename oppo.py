@@ -20,7 +20,7 @@ def tokens_to_instructions(tokens):
     instructions = []
     stack = []
 
-    def append_instruction(x: tuple, array=instructions):
+    def append_instruction(x: tuple):
         instructions.append(
             (x[0], x[1] if len(x) == 2 else None, len(instructions)))
         return x
@@ -152,4 +152,5 @@ if __name__ == "__main__":
         arch = args.compile
         if arch == "sickvm":
             compile_instructions_to_sickvm(instructions, output_name)
-        sys.exit(-1)
+        else:
+            sys.exit(-1)
