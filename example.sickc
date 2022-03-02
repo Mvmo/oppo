@@ -1,0 +1,4 @@
+spush "Hello, World"
+store x
+load x
+println
