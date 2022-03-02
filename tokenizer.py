@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from distutils.errors import LibError
 from enum import Enum, auto
-from turtle import pos, position
 from typing import *
 
 intrinsics = [
@@ -21,7 +20,8 @@ intrinsics = [
     "while", 
     "do", 
     "end", 
-    "as"
+    "as",
+    "print"
 ]
 
 @dataclass
@@ -45,7 +45,7 @@ class Token:
     location: TokenLocation
     typ: TokenType
 
-def tokenize(input: str, debug = True):
+def tokenize(input: str, debug = True) -> "list[Token]":
     lines = input.splitlines(keepends=False)
     position: Tuple[int, int] = (0, 0)
 
@@ -58,15 +58,11 @@ def tokenize(input: str, debug = True):
         row, column = position
         position = (row, column + 1)
 
-        return position
-
     def inc_row():
         nonlocal position
         
         row, column = position
         position = (row + 1, column)
-
-        return position
 
     def flush_token():
         nonlocal current_token
@@ -81,7 +77,7 @@ def tokenize(input: str, debug = True):
             current_token.typ = TokenType.STRING
         elif current_token.literal.isnumeric():
             current_token.typ = TokenType.INT
-        elif current_token.literal == "true":
+        elif current_token.literal == "true" or current_token.literal == "false":
             current_token.typ = TokenType.BOOLEAN
         else:
             current_token.typ = TokenType.IDENTIFIER
@@ -135,3 +131,4 @@ def tokenize(input: str, debug = True):
                 flush_token()
             inc_column()
         inc_row()
+    return tokens
