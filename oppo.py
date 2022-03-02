@@ -35,7 +35,7 @@ def tokens_to_instructions(tokens):
         if token.typ == TokenType.BOOLEAN:
             append_instruction(("bpush", token.literal.lower()))
         if token.typ == TokenType.STRING:
-            append_instruction(("spush", remove_suffix(remove_prefix(token.literal, "\""), "\"")))
+            append_instruction(("spush", token.literal))
         if token.typ == TokenType.INTRINSIC:
             literal = token.literal
             if literal == "+":
@@ -60,6 +60,10 @@ def tokens_to_instructions(tokens):
                 append_instruction(("gte", ))
             elif literal == "dup":
                 append_instruction(("dup", ))
+            elif literal == "print":
+                append_instruction(("print", ))
+            elif literal == "println":
+                append_instruction(("println", ))
             elif literal == "if":
                 instruction = append_instruction(("cjmp", ("if", ri)))
                 stack.append(instruction)
