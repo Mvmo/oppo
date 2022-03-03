@@ -131,10 +131,10 @@ def compile_instructions_to_sickvm(instructions, binary_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=f"OPPO Language - {oppo_version}")
+    parser = argparse.ArgumentParser(description=f"OPPO Compiler - {oppo_version}")
 
     parser.add_argument("file", metavar="F", type=str, nargs=1, help="File to compile")
-    parser.add_argument("--compile", dest="compile", choices=["sickvm"], type=str, required=False)
+    parser.add_argument("--target", dest="target", choices=["sickvm"], type=str, required=False)
     parser.add_argument("--output", dest="output", type=str, required=False)
     parser.add_argument("--debug", dest="debug", type=bool, required=False)
 
@@ -147,10 +147,10 @@ if __name__ == "__main__":
 
     instructions = tokens_to_instructions(tokens)
 
-    if args.compile != None:
+    if args.target != None:
         output_name = args.output if not None else "a"
-        arch = args.compile
-        if arch == "sickvm":
+        target = args.target
+        if target == "sickvm":
             compile_instructions_to_sickvm(instructions, output_name)
-        else:
-            sys.exit(-1)
+    else:
+        print(f"You need to specify a target architecture [sickvm]")
