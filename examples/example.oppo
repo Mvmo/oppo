@@ -1,2 +1,2 @@
-"Hello, World" as x
+"Hello, World!" as x
 x println
