@@ -101,7 +101,7 @@ def tokens_to_instructions(tokens):
                 if len(tokens) == index - 1:
                     print(f"Tokenizer: no tokens following after as!")
                 identifier = tokens[index].literal
-                if identifier in intrinsics or identifier.isnumeric():
+                if identifier in intrinsics or identifier in keywords or identifier.isnumeric():
                     print(f"Tokenizer: {identifier} can't be used as identifier")
                     sys.exit(-1)
 

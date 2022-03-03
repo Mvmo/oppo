@@ -3,6 +3,16 @@ from distutils.errors import LibError
 from enum import Enum, auto
 from typing import *
 
+keywords = [
+    "proc"
+    "if",
+    "else",
+    "while",
+    "do",
+    "end",
+    "as"
+]
+
 intrinsics = [
     "+",
     "-",
@@ -15,12 +25,6 @@ intrinsics = [
     "<=", 
     ">=", 
     "dup", 
-    "if", 
-    "else", 
-    "while", 
-    "do", 
-    "end", 
-    "as",
     "println",
     "print"
 ]
@@ -72,7 +76,7 @@ def tokenize(input: str, debug = True) -> "list[Token]":
 
         if current_token == None or len(current_token.literal) == 0:
             return
-        elif current_token.literal in intrinsics:
+        elif current_token.literal in intrinsics or current_token.literal in keywords:
             current_token.typ = TokenType.INTRINSIC
         elif current_token.literal.startswith("\"") and current_token.literal.endswith("\""):
             current_token.typ = TokenType.STRING
