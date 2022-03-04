@@ -1,9 +1,13 @@
-"Hello, World!" as x
-x println
-
-proc add-two
-    int x
-    int y
+proc print-line
+    string x
 do
-    x y + println
+    x "\n" + print
 end
+
+"Hello, World" print-line
+"Hello, World2" print-line
+
+20 21 ~ swap ~
+
+"sizeof: " print
+"d" sizeof println

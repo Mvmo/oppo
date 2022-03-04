@@ -30,6 +30,7 @@ intrinsics = [
     ">",
     "<=", 
     ">=", 
+    "sizeof",
     "swap",
     "dup", 
     "println",
