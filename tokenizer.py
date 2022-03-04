@@ -116,7 +116,6 @@ def tokenize(input: str, debug = True) -> "list[Token]":
             continue
         return start
 
-    print(f"{position} {lines}")
     while position[0] < len(lines):
         line = lines[position[0]]
         if len(line) == 0:

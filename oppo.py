@@ -90,17 +90,15 @@ def tokens_to_instructions(tokens):
                 instruction = append_instruction((f"$~while{len(instructions)}:", ))
                 stack.append(instruction)
             elif literal == "proc":
-                print(f"Got {token.literal}")
                 if len(tokens) == index - 1:
                     print(f"Tokenizer: no tokens following after as!")
+                    sys.exit(1)
                 identifier = tokens[index].literal
                 if identifier in intrinsics or identifier in keywords or identifier.isnumeric():
                     print(f"Tokenizer: {identifier} can't be used as identifier")
-                    sys.exit(-1)
+                    sys.exit(1)
 
                 index += 1
-
-                print(f"proc-name: {token.literal}")
 
                 jmp_instruction = append_instruction(("jmp", ("proc_start", ri)))
                 append_instruction((f"{identifier}:", ))
@@ -124,8 +122,6 @@ def tokens_to_instructions(tokens):
 
                     index = index + 1
                     next_token = tokens[index]
-
-                print("Here")
                 
                 for param_identifier in reversed(param_identifiers):
                     append_instruction(("store", (param_identifier)))
