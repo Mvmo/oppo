@@ -1,4 +1,5 @@
 import argparse
+from cgi import print_form
 import sys
 
 from tokenizer import *
@@ -17,6 +18,14 @@ def remove_suffix(text, suffix):
     return text
 
 def tokens_to_instructions(tokens):
+    function_names = []
+    for i in range(len(tokens)):
+        token = tokens[i]
+        if token.typ == TokenType.KEYWORD and token.literal == "proc":
+            function_names.append(tokens[i+1].literal)
+
+    print(f"{function_names}")
+
     instructions = []
     stack = []
 
@@ -30,6 +39,8 @@ def tokens_to_instructions(tokens):
         token: Token = tokens[index]
         ri = len(instructions)
         index += 1
+        literal = token.literal
+        print(f"{token}")
         if token.typ == TokenType.INT:
             append_instruction(("ipush", int(token.literal)))
         if token.typ == TokenType.BOOLEAN:
@@ -37,7 +48,6 @@ def tokens_to_instructions(tokens):
         if token.typ == TokenType.STRING:
             append_instruction(("spush", token.literal))
         if token.typ == TokenType.INTRINSIC:
-            literal = token.literal
             if literal == "+":
                 append_instruction(("add", ))
             elif literal == "-":
@@ -64,7 +74,8 @@ def tokens_to_instructions(tokens):
                 append_instruction(("print", ))
             elif literal == "println":
                 append_instruction(("println", ))
-            elif literal == "if":
+        elif token.typ == TokenType.KEYWORD:
+            if literal == "if":
                 instruction = append_instruction(("cjmp", ("if", ri)))
                 stack.append(instruction)
                 # first param is where to jump if true and end param is where to jmp if false
@@ -78,8 +89,62 @@ def tokens_to_instructions(tokens):
             elif literal == "while":
                 instruction = append_instruction((f"$~while{len(instructions)}:", ))
                 stack.append(instruction)
+            elif literal == "proc":
+                print(f"Got {token.literal}")
+                if len(tokens) == index - 1:
+                    print(f"Tokenizer: no tokens following after as!")
+                identifier = tokens[index].literal
+                if identifier in intrinsics or identifier in keywords or identifier.isnumeric():
+                    print(f"Tokenizer: {identifier} can't be used as identifier")
+                    sys.exit(-1)
+
+                index += 1
+
+                print(f"proc-name: {token.literal}")
+
+                jmp_instruction = append_instruction(("jmp", ("proc_start", ri)))
+                append_instruction((f"{identifier}:", ))
+
+                param_identifiers = []
+                next_token = tokens[index]
+                while next_token.literal != "do":
+                    if next_token.typ != TokenType.TYPE:
+                        print(f"Expected type and got {next_token.typ}")
+                        sys.exit(-1)
+                    append_instruction(("req", (next_token.literal)))
+                    
+                    index = index + 1
+                    next_token = tokens[index]
+
+                    if next_token.typ != TokenType.IDENTIFIER:
+                        print(f"Expected identififer and got {next_token.typ}")
+                        sys.exit(-1)
+
+                    param_identifiers.append(next_token.literal)
+
+                    index = index + 1
+                    next_token = tokens[index]
+
+                print("Here")
+                
+                for param_identifier in reversed(param_identifiers):
+                    append_instruction(("store", (param_identifier)))
+
+                jmp_instruction = ("jmp", ("proc_start", ri, param_identifiers))
+
+                print(f"append {jmp_instruction} to stack")
+                stack.append(jmp_instruction)
+                instructions[jmp_instruction[1][1]] = jmp_instruction
+
+                index += 1
             elif literal == "do":
-                enclosing = stack.pop()
+                if len(stack) == 0:
+                    continue
+                enclosing = stack[len(stack) - 1]
+                if not str(enclosing[0]).startswith("$~while"):
+                    print(f"continue")
+                    continue
+                stack.pop()
                 instruction = append_instruction(("cjmp", ("do", enclosing[0], ri)))
                 stack.append(instruction)
             elif literal == "end":
@@ -89,14 +154,21 @@ def tokens_to_instructions(tokens):
                     if_index = enclosing[1][1]
                     instructions[if_index] = (
                         "cjmp", (if_index + 1, ri))
-                if typ == "else":
+                elif typ == "else":
                     else_index = enclosing[1][1]
                     instructions[else_index] = ("jmp", (ri))
-                if typ == "do":
+                elif typ == "do":
                     while_label = enclosing[1][1]
                     do_index = enclosing[1][2]
                     instructions[do_index] = ("cjmp", (do_index + 1, ri + 1))
                     append_instruction((remove_suffix(f"goto {while_label}", ":"), ))
+                elif typ == "proc_start":
+                    jmp_index = enclosing[1][1]
+                    identififers_to_del = enclosing[1][2]
+                    for identififer in identififers_to_del:
+                        append_instruction(("del", identififer))
+                    append_instruction(("goto", "$"))
+                    instructions[jmp_index] = ("jmp", len(instructions))
             elif literal == "as":
                 if len(tokens) == index - 1:
                     print(f"Tokenizer: no tokens following after as!")
@@ -109,6 +181,9 @@ def tokens_to_instructions(tokens):
                 instruction = append_instruction(("store", identifier))
                 continue
         elif token.typ == TokenType.IDENTIFIER:
+            if token.literal in function_names:
+                append_instruction(("call", token.literal))
+                continue
             append_instruction(("load", token.literal))
             continue
     return instructions

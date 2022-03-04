@@ -3,8 +3,14 @@ from distutils.errors import LibError
 from enum import Enum, auto
 from typing import *
 
+type_name_dict = {
+    "int": "sick::int",
+    "string": "sick::int",
+    "bool": "sick::bool"
+}
+
 keywords = [
-    "proc"
+    "proc",
     "if",
     "else",
     "while",
@@ -38,10 +44,12 @@ class TokenLocation:
 
 class TokenType(Enum):
     INTRINSIC = auto()
+    KEYWORD = auto()
     IDENTIFIER = auto()
     INT = auto()
     STRING = auto()
     BOOLEAN = auto()
+    TYPE = auto()
 
 
 @dataclass
@@ -76,8 +84,13 @@ def tokenize(input: str, debug = True) -> "list[Token]":
 
         if current_token == None or len(current_token.literal) == 0:
             return
-        elif current_token.literal in intrinsics or current_token.literal in keywords:
+        elif current_token.literal in type_name_dict.keys():
+            current_token.literal = type_name_dict[current_token.literal]
+            current_token.typ = TokenType.TYPE
+        elif current_token.literal in intrinsics:
             current_token.typ = TokenType.INTRINSIC
+        elif current_token.literal in keywords:
+            current_token.typ = TokenType.KEYWORD
         elif current_token.literal.startswith("\"") and current_token.literal.endswith("\""):
             current_token.typ = TokenType.STRING
         elif current_token.literal.isnumeric():
@@ -103,6 +116,7 @@ def tokenize(input: str, debug = True) -> "list[Token]":
             continue
         return start
 
+    print(f"{position} {lines}")
     while position[0] < len(lines):
         line = lines[position[0]]
         if len(line) == 0 or (len(line) == 1 and (line[0] == " " or line[0] == "\t")):
