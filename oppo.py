@@ -81,6 +81,8 @@ def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = [
                 append_instruction(("gt", ))
             elif literal == ">=":
                 append_instruction(("gte", ))
+            elif literal == "swap":
+                append_instruction(("swap", ))
             elif literal == "dup":
                 append_instruction(("dup", ))
             elif literal == "print":

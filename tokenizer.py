@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from distutils.errors import LibError
 from enum import Enum, auto
 from typing import *
 
@@ -31,6 +30,7 @@ intrinsics = [
     ">",
     "<=", 
     ">=", 
+    "swap",
     "dup", 
     "println",
     "print"
@@ -52,7 +52,6 @@ class TokenType(Enum):
     BOOLEAN = auto()
     TYPE = auto()
     INCLUDE = auto()
-
 
 @dataclass
 class Token:
