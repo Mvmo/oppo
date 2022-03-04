@@ -1,2 +1,9 @@
 "Hello, World!" as x
 x println
+
+proc add-two
+    int x
+    int y
+do
+    x y + println
+end
