@@ -16,7 +16,8 @@ keywords = [
     "while",
     "do",
     "end",
-    "as"
+    "as",
+    "include"
 ]
 
 intrinsics = [
@@ -50,6 +51,7 @@ class TokenType(Enum):
     STRING = auto()
     BOOLEAN = auto()
     TYPE = auto()
+    INCLUDE = auto()
 
 
 @dataclass
@@ -84,6 +86,8 @@ def tokenize(input: str, debug = True) -> "list[Token]":
 
         if current_token == None or len(current_token.literal) == 0:
             return
+        elif current_token.literal == "include":
+            current_token.typ = TokenType.INCLUDE
         elif current_token.literal in type_name_dict.keys():
             current_token.literal = type_name_dict[current_token.literal]
             current_token.typ = TokenType.TYPE
@@ -92,6 +96,11 @@ def tokenize(input: str, debug = True) -> "list[Token]":
         elif current_token.literal in keywords:
             current_token.typ = TokenType.KEYWORD
         elif current_token.literal.startswith("\"") and current_token.literal.endswith("\""):
+            token_before = tokens[len(tokens) - 1]
+            if token_before.typ == TokenType.INCLUDE:
+                tokens[len(tokens) - 1] = Token(current_token.literal.replace("\"", ""), token_before.location, token_before.typ)
+                current_token = Token(literal="",location=TokenLocation("", position[0], position[1], 0), typ=None)
+                return
             current_token.typ = TokenType.STRING
         elif current_token.literal.isnumeric():
             current_token.typ = TokenType.INT

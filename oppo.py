@@ -17,14 +17,27 @@ def remove_suffix(text, suffix):
         return text[:-len(suffix)]
     return text
 
-def tokens_to_instructions(tokens):
+def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = []) -> list:
+    files_to_include = list(
+                filter(lambda file_name : not file_name in include_array,
+                map(lambda token : token.literal, 
+                filter(lambda token : token.typ == TokenType.INCLUDE, tokens))))
+
+    for file_name in files_to_include:
+        with open(file_name + ".oppo", "r") as file:
+            include_array.append(file_name)
+            tokens += tokenize(file.read())
+
+    if len(files_to_include) >= 1:
+        return tokens_to_instructions(tokens)
+
+    tokens = list(filter(lambda token : token.typ != TokenType.INCLUDE, tokens))
+
     function_names = []
     for i in range(len(tokens)):
         token = tokens[i]
         if token.typ == TokenType.KEYWORD and token.literal == "proc":
             function_names.append(tokens[i+1].literal)
-
-    print(f"{function_names}")
 
     instructions = []
     stack = []
