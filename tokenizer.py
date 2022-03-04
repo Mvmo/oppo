@@ -5,7 +5,7 @@ from typing import *
 
 type_name_dict = {
     "int": "sick::int",
-    "string": "sick::int",
+    "string": "sick::string",
     "bool": "sick::bool"
 }
 
