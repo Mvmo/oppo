@@ -1,13 +1,9 @@
+include "std/strings"
+
 proc print-line
     string x
 do
     x "\n" + print
 end
 
-"Hello, World" print-line
-"Hello, World2" print-line
-
-20 21 ~ swap ~
-
-"sizeof: " print
-"d" sizeof println
+"Hello, World" true + println

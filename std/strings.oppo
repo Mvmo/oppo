@@ -1,0 +1,5 @@
+proc str-len
+    string str
+do
+    str sizeof
+end

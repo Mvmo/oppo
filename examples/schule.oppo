@@ -1,0 +1,14 @@
+proc calc
+    int x
+    int y
+do
+    "Auszahlung" println
+end
+
+proc log-info
+    string x
+do
+    x println
+end
+
+"HD" std

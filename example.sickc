@@ -1,4 +1,21 @@
-spush "Hello, World"
+jmp 11
+calc:
+req sick::int
+store y
+req sick::int
+store x
+spush "Auszahlung"
+println
+del x
+del y
+goto $
+jmp 19
+std:
+req sick::string
 store x
 load x
 println
+del x
+goto $
+spush "HD"
+call std

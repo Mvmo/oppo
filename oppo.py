@@ -53,7 +53,6 @@ def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = [
         ri = len(instructions)
         index += 1
         literal = token.literal
-        print(f"{token}")
         if token.typ == TokenType.INT:
             append_instruction(("ipush", int(token.literal)))
         if token.typ == TokenType.BOOLEAN:
@@ -120,13 +119,14 @@ def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = [
                 jmp_instruction = append_instruction(("jmp", ("proc_start", ri)))
                 append_instruction((f"{identifier}:", ))
 
-                param_identifiers = []
+                params = []
                 next_token = tokens[index]
                 while next_token.literal != "do":
                     if next_token.typ != TokenType.TYPE:
                         print(f"Expected type and got {next_token.typ}")
                         sys.exit(-1)
-                    append_instruction(("req", (next_token.literal)))
+
+                    type_name = next_token.literal
                     
                     index = index + 1
                     next_token = tokens[index]
@@ -135,17 +135,17 @@ def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = [
                         print(f"Expected identififer and got {next_token.typ}")
                         sys.exit(-1)
 
-                    param_identifiers.append(next_token.literal)
+                    params.append((type_name, next_token.literal))
 
                     index = index + 1
                     next_token = tokens[index]
                 
-                for param_identifier in reversed(param_identifiers):
-                    append_instruction(("store", (param_identifier)))
+                for param in reversed(params):
+                    append_instruction(("req", (param[0])))
+                    append_instruction(("store", (param[1])))
 
-                jmp_instruction = ("jmp", ("proc_start", ri, param_identifiers))
+                jmp_instruction = ("jmp", ("proc_start", ri, params))
 
-                print(f"append {jmp_instruction} to stack")
                 stack.append(jmp_instruction)
                 instructions[jmp_instruction[1][1]] = jmp_instruction
 
@@ -179,7 +179,7 @@ def tokens_to_instructions(tokens: "list[Token]", include_array: "list[str]" = [
                     jmp_index = enclosing[1][1]
                     identififers_to_del = enclosing[1][2]
                     for identififer in identififers_to_del:
-                        append_instruction(("del", identififer))
+                        append_instruction(("del", identififer[1]))
                     append_instruction(("goto", "$"))
                     instructions[jmp_index] = ("jmp", len(instructions))
             elif literal == "as":
